@@ -13,10 +13,9 @@ const loadMoreBtn= document.querySelector('.load-more')
 
 let searchQuery='';
 let totalImages=0;
-
 let currentPage=0;
-let gallery = new SimpleLightbox('.gallery a', {captionDelay: 250, captionsData: "alt"});
-// console.log(value);
+
+let gallery = new SimpleLightbox('.gallery a',  {captionDelay: 250});
 
 form.addEventListener('submit', onBtnSearch);
 loadMoreBtn.addEventListener('click', onLoadMore)
@@ -24,6 +23,7 @@ loadMoreBtn.addEventListener('click', onLoadMore)
 function onBtnSearch(evt){
 evt.preventDefault();
 container.innerHTML='';
+loadMoreBtn.classList.add('hidden');
 currentPage=0;
 totalImages=0
 searchQuery= input.value
@@ -43,7 +43,7 @@ function makeMarkupImg(data){
     console.log(data.total);
     console.log(totalImages);
     if(data.total===0){notFound()}
-    else if (data.total<=totalImages){Notify.info(('Здається це все...'), {position: 'center-top', timeout: 3000, fontSize: '20px', width: '380px',});
+    else if (data.total<=totalImages){Notify.info(('Здається це все...'), {position: 'center-top', timeout: 1000, fontSize: '20px', width: '380px',});
 return loadMoreBtn.classList.add('hidden');}
     else{loadMoreBtn.classList.remove('hidden');
   const markup= data.hits.map(({webformatURL, largeImageURL, tags, likes, views, comments, downloads })=>{return `<a class="photo-card" href="${largeImageURL}">
@@ -65,7 +65,7 @@ return loadMoreBtn.classList.add('hidden');}
     </a>`}).join('')
 //   console.log(typeof markup);
   container.insertAdjacentHTML("beforeend", markup);
-
+  gallery.refresh()
   }
   
 }
@@ -91,21 +91,9 @@ try{ const params = new URLSearchParams({
 }
 
 function notFound(){
-    Notify.failure(('Нічого не знайшлося... Давай ще щось?'), {position: 'center-top', timeout: 3000, fontSize: '20px', width: '380px',});
+    Notify.failure(('Нічого не знайшлося... Будемо ще щось шукати?'), {position: 'center-top', timeout: 1000, fontSize: '20px', width: '380px',});
 }
 
 function emptyQuery(){
-    Notify.info(('Що шукаємо?'), {position: 'center-top', timeout: 3000, fontSize: '20px', width: '380px',});
+    Notify.info(('Що шукаємо?'), {position: 'center-top', timeout: 1000, fontSize: '20px', width: '380px',});
 }
-
-
-gallery.on('show.simplelightbox', function () {
-
-});
-// webformatURL - ссылка на маленькое изображение для списка карточек.
-// largeImageURL - ссылка на большое изображение.
-// tags - строка с описанием изображения. Подойдет для атрибута alt.
-// likes - количество лайков.
-// views - количество просмотров.
-// comments - количество комментариев.
-// downloads 
