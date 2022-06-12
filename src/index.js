@@ -20,8 +20,8 @@ let gallery = new SimpleLightbox('.gallery a',  {captionDelay: 250});
 form.addEventListener('submit', onBtnSearch);
 loadMoreBtn.addEventListener('click', onLoadMore)
 
-function onBtnSearch(evt){
-evt.preventDefault();
+async function onBtnSearch(evt){
+try {evt.preventDefault();
 container.innerHTML='';
 loadMoreBtn.classList.add('hidden');
 currentPage=0;
@@ -31,22 +31,27 @@ if(searchQuery===''){ emptyQuery()
 return}
 currentPage+=1;
 
-fetchImages(searchQuery).then(makeMarkupImg).catch(error=>console.log(error));
+const imageSet = await fetchImages(searchQuery);
+await makeMarkupImg(imageSet)
+await firstQuery(imageSet)}
+catch{error=>console.log(error)};
 }
 
-function onLoadMore(){
-    currentPage+=1
-    fetchImages(searchQuery).then(makeMarkupImg).catch(error=>console.log(error));
+async function onLoadMore(){
+try{
+currentPage+=1
+const imageSet = await fetchImages(searchQuery);
+await makeMarkupImg(imageSet)}
+catch{error=>console.log(error)};
 }
+
 function makeMarkupImg(data){
-    totalImages+=data.hits.length;
-    console.log(data.total);
-    console.log(totalImages);
-    if(data.total===0){notFound()}
-    else if (data.total<=totalImages){Notify.info(('Здається це все...'), {position: 'center-top', timeout: 1000, fontSize: '20px', width: '380px',});
+totalImages+=data.hits.length;
+if(data.total===0){notFound()}
+else if (data.total<=totalImages){Notify.info(('Здається це все...'), {position: 'left-top', timeout: 1000, fontSize: '20px', width: '380px',});
 return loadMoreBtn.classList.add('hidden');}
-    else{loadMoreBtn.classList.remove('hidden');
-  const markup= data.hits.map(({webformatURL, largeImageURL, tags, likes, views, comments, downloads })=>{return `<a class="photo-card" href="${largeImageURL}">
+else{loadMoreBtn.classList.remove('hidden');
+const markup= data.hits.map(({webformatURL, largeImageURL, tags, likes, views, comments, downloads })=>{return `<a class="photo-card" href="${largeImageURL}">
     <img class="image-item" src="${webformatURL}" alt="${tags}" data-source="${largeImageURL}"loading="lazy" />
     <div class="info">
       <p class="info-item">
@@ -63,7 +68,6 @@ return loadMoreBtn.classList.add('hidden');}
       </p>
     </div>
     </a>`}).join('')
-//   console.log(typeof markup);
   container.insertAdjacentHTML("beforeend", markup);
   gallery.refresh()
   }
@@ -77,7 +81,7 @@ try{ const params = new URLSearchParams({
            image_type: "photo",
            orientation: "horizontal",
            safesearch: true,
-           per_page: 20,
+           per_page: 40,
            // page: 1
          });
          const url=`${BASE_URL}?key=${API_KEY}&q=${query}&${params}&page=${currentPage}`
@@ -91,9 +95,13 @@ try{ const params = new URLSearchParams({
 }
 
 function notFound(){
-    Notify.failure(('Нічого не знайшлося... Будемо ще щось шукати?'), {position: 'center-top', timeout: 1000, fontSize: '20px', width: '380px',});
+    Notify.failure(('Нічого не знайшлося... Будемо ще щось шукати?'), {position: 'left-top', timeout: 1000, fontSize: '20px', width: '380px',});
 }
 
 function emptyQuery(){
-    Notify.info(('Що шукаємо?'), {position: 'center-top', timeout: 1000, fontSize: '20px', width: '380px',});
+    Notify.info(('Що шукаємо?'), {position: 'left-top', timeout: 1000, fontSize: '20px', width: '380px',});
+}
+
+function firstQuery(data){
+    Notify.info((`Юххху! Ми знайшли для тебе ${data.totalHits} зображень! `), {position: 'left-top', timeout: 1000, fontSize: '20px', width: '380px',});
 }
