@@ -21,18 +21,16 @@ form.addEventListener('submit', onBtnSearch);
 loadMoreBtn.addEventListener('click', onLoadMore)
 
 async function onBtnSearch(evt){
-try {evt.preventDefault();
+ try {evt.preventDefault();
 container.innerHTML='';
 loadMoreBtn.classList.add('hidden');
-currentPage=0;
-totalImages=0
+currentPage=1;
+totalImages=0;
 searchQuery= input.value
-if(searchQuery===''){ emptyQuery()
-return}
-currentPage+=1;
+if(searchQuery===''){return}
 
 const imageSet = await fetchImages(searchQuery);
-await makeMarkupImg(imageSet)
+await renderPage(imageSet);
 await firstQuery(imageSet)}
 catch{error=>console.log(error)};
 }
@@ -41,16 +39,22 @@ async function onLoadMore(){
 try{
 currentPage+=1
 const imageSet = await fetchImages(searchQuery);
-await makeMarkupImg(imageSet)}
+await renderPage(imageSet);}
 catch{error=>console.log(error)};
 }
 
+function renderPage(data){
+  totalImages+=data.hits.length;
+  if(data.total===0){notFound()}
+  else if (data.total<=totalImages){makeMarkupImg(data);
+    setTimeout(endOfResults, 3000);
+  loadMoreBtn.classList.add('hidden');}
+  else{loadMoreBtn.classList.remove('hidden');
+  makeMarkupImg(data);
+    }
+  }
+  
 function makeMarkupImg(data){
-totalImages+=data.hits.length;
-if(data.total===0){notFound()}
-else if (data.total<=totalImages){Notify.info(('Здається це все...'), {position: 'left-top', timeout: 1000, fontSize: '20px', width: '380px',});
-return loadMoreBtn.classList.add('hidden');}
-else{loadMoreBtn.classList.remove('hidden');
 const markup= data.hits.map(({webformatURL, largeImageURL, tags, likes, views, comments, downloads })=>{return `<a class="photo-card" href="${largeImageURL}">
     <img class="image-item" src="${webformatURL}" alt="${tags}" data-source="${largeImageURL}"loading="lazy" />
     <div class="info">
@@ -72,7 +76,7 @@ const markup= data.hits.map(({webformatURL, largeImageURL, tags, likes, views, c
   gallery.refresh()
   }
   
-}
+
 
 async function fetchImages(query){
 try{ const params = new URLSearchParams({
@@ -82,7 +86,6 @@ try{ const params = new URLSearchParams({
            orientation: "horizontal",
            safesearch: true,
            per_page: 40,
-           // page: 1
          });
          const url=`${BASE_URL}?key=${API_KEY}&q=${query}&${params}&page=${currentPage}`
          
@@ -103,5 +106,10 @@ function emptyQuery(){
 }
 
 function firstQuery(data){
+  if (data.totalHits>0){
     Notify.info((`Юххху! Ми знайшли для тебе ${data.totalHits} зображень! `), {position: 'left-top', timeout: 1000, fontSize: '20px', width: '380px',});
+}
+}
+function endOfResults(){
+  Notify.info(('Здається це все...'), {position: 'left-top', timeout: 1000, fontSize: '20px', width: '380px',});
 }
